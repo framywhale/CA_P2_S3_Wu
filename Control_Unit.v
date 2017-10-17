@@ -3,6 +3,7 @@ module Control_Unit(
     input  wire       zero,
     input  wire [5:0] op,
     input  wire [5:0] func,
+    input  wire [4:0] rt,
     output wire       MemEn,
     output wire       JSrc,
     output wire       MemToReg,
