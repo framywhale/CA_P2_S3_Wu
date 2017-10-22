@@ -11,7 +11,7 @@
 
 ### （阶段三） 32位五级流水的MPIS处理器数据通路图：（暂为）
 
-![Datapath_version2.0](https://github.com/framywhale/CA_P2_S2_Wu/blob/master/Datapath_version2.0.PNG)
+![Datapath_version2.3](https://github.com/framywhale/CA_P2_S3_Wu/blob/master/Datapath_version2.3.PNG)
 
 ### 控制信号（Stage3）
 
