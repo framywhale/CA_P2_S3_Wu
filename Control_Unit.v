@@ -75,31 +75,33 @@ wire inst_bgez   = (op == 6'd1) && (rt == 5'b00001);
 wire inst_bltzal = (op == 6'd1) && (rt == 5'b10000);
 wire inst_bgezal = (op == 6'd1) && (rt == 5'b10001);
 
-//////////////////////////////////////////////////////////////////
-//                 Control signal assignment                    //
-//////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//                        Control signal assignment                          //
+///////////////////////////////////////////////////////////////////////////////
 assign MemToReg   = ~rst &   inst_lw;
-assign JSrc       = ~rst &   inst_jr;
+assign JSrc       = ~rst &  (inst_jr   | inst_jalr );
 assign MemEn      = ~rst &  (inst_sw   | inst_lw   );
 assign is_rs_read = ~rst & ~(inst_j    | inst_jal  );
 assign is_rt_read = ~rst & ~(inst_addi | inst_addiu | inst_slti | inst_sltiu |
                              inst_andi | inst_lui   | inst_ori  | inst_xori  |
-                             inst_j    | inst_jal   | inst_lw );
+                             inst_j    | inst_jal   | inst_lw   | inst_jalr  );
 
 assign is_branch  = inst_bne | inst_blez | inst_bgez | inst_bgezal
-                  | inst_beq | inst_bltz | inst_bgtz | inst_bltzal ;
+                  | inst_beq | inst_bltz | inst_bgtz | inst_bltzal;
 
 assign PCSrc[1]   = ~rst & (is_branch   & BranchCond );
-assign PCSrc[0]   = ~rst & (inst_jal    | inst_j     | inst_jr  );
+assign PCSrc[0]   = ~rst & (inst_jal    | inst_j     | inst_jr  | inst_jalr );
 
-assign ALUSrcA[1] = ~rst & (inst_sll    | inst_sra   | inst_srl );
-assign ALUSrcA[0] = ~rst & (inst_jal);
+assign ALUSrcA[1] = ~rst & (inst_sll    | inst_sra   | inst_srl   );
+assign ALUSrcA[0] = ~rst & (inst_jal    | inst_jalr  | inst_bltzal|
+                            inst_bgezal );
 
-assign ALUSrcB[1] = ~rst & (inst_jal    | inst_ori   | inst_xori  |
-                            inst_andi   );
-assign ALUSrcB[0] = ~rst & (inst_lw     | inst_sw    | inst_addiu |
-                            inst_slti   | inst_sltiu | inst_lui   |
-                            inst_addi   | inst_andi  | inst_ori   |
+assign ALUSrcB[1] = ~rst & (inst_jal    | inst_ori   | inst_xori   |
+                            inst_andi   | inst_jalr  | inst_bgezal |
+                            inst_bltzal );
+assign ALUSrcB[0] = ~rst & (inst_lw     | inst_sw    | inst_addiu  |
+                            inst_slti   | inst_sltiu | inst_lui    |
+                            inst_addi   | inst_andi  | inst_ori    |
                             inst_xori   );
 
 assign RegDst[1]  = ~rst & (inst_jal);
@@ -108,40 +110,42 @@ assign RegDst[0]  = ~rst & (inst_addu   | inst_or    | inst_slt   |
                             inst_subu   | inst_sltu  | inst_and   |
                             inst_nor    | inst_xor   | inst_sllv  |
                             inst_sra    | inst_srav  | inst_srl   |
-                            inst_srlv   );
+                            inst_srlv   | inst_jalr  );
 
-assign RegWrite = {4{~rst & (inst_lw    | inst_addiu | inst_slti  |
-                             inst_sltiu | inst_lui   | inst_addu  |
-                             inst_or    | inst_slt   | inst_sll   |
-                             inst_jal   | inst_addi  | inst_andi  |
-                             inst_ori   | inst_xori  | inst_add   |
-                             inst_sub   | inst_subu  | inst_sltu  |
-                             inst_and   | inst_nor   | inst_xor   |
-                             inst_sllv  | inst_sra   | inst_srav  |
-                             inst_srl   | inst_srlv  )}};
-assign MemWrite = {4{~rst & inst_sw}};
+assign RegWrite = {4{~rst & (inst_lw     | inst_addiu  | inst_slti  |
+                             inst_sltiu  | inst_lui    | inst_addu  |
+                             inst_or     | inst_slt    | inst_sll   |
+                             inst_jal    | inst_addi   | inst_andi  |
+                             inst_ori    | inst_xori   | inst_add   |
+                             inst_sub    | inst_subu   | inst_sltu  |
+                             inst_and    | inst_nor    | inst_xor   |
+                             inst_sllv   | inst_sra    | inst_srav  |
+                             inst_srl    | inst_srlv   | inst_jalr  |
+                             inst_bltzal | inst_bgezal )}};
+assign MemWrite = {4{~rst &  inst_sw}};
 
 // ALUop control signal
-assign ALUop[3] = ~rst & (inst_xori |  inst_nor |
-                          inst_xor  | inst_sra  | inst_srav  |
-                          inst_srl  | inst_srlv );
+assign ALUop[3] = ~rst & (inst_xori | inst_nor  | inst_xor  |
+                          inst_sra  | inst_srav | inst_srl  |
+                          inst_srlv );
 
 assign ALUop[2] = ~rst & (inst_slti | inst_slt  | inst_sltiu |
                           inst_sll  | inst_sub  | inst_sltu  |
                           inst_sllv | inst_srl  | inst_srlv  |
                           inst_subu);
 
-assign ALUop[1] = ~rst & (inst_lw   | inst_sw   | inst_addiu |
-                          inst_slti | inst_slt  | inst_lui   |
-                          inst_jal  | inst_addu | inst_addi  |
-                          inst_xori | inst_add  | inst_sub   |
-                          inst_xor  | inst_sra  | inst_srav  |
-                          inst_subu );
+assign ALUop[1] = ~rst & (inst_lw     | inst_sw   | inst_addiu  |
+                          inst_slti   | inst_slt  | inst_lui    |
+                          inst_jal    | inst_addu | inst_addi   |
+                          inst_xori   | inst_add  | inst_sub    |
+                          inst_xor    | inst_sra  | inst_srav   |
+                          inst_subu   | inst_jalr | inst_bgezal |
+                          inst_bltzal );
 
-assign ALUop[0] = ~rst & (inst_slti | inst_slt  | inst_or    |
-                          inst_lui  | inst_sll  | inst_ori   |
-                          inst_nor  | inst_sllv | inst_sra   |
-                          inst_srav );
+assign ALUop[0] = ~rst & (inst_slti  | inst_slt  | inst_or    |
+                          inst_lui   | inst_sll  | inst_ori   |
+                          inst_nor   | inst_sllv | inst_sra   |
+                          inst_srav  );
 
 assign B_Type[5] = inst_bne;
 assign B_Type[4] = inst_beq;
