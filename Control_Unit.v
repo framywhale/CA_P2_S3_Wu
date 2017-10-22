@@ -1,9 +1,9 @@
 module Control_Unit(
     input  wire       rst,
-    input  wire       zero,
+    input  wire       BranchCond,
+    input  wire [4:0] rt,
     input  wire [5:0] op,
     input  wire [5:0] func,
-    input  wire [4:0] rt,
     output wire       MemEn,
     output wire       JSrc,
     output wire       MemToReg,
@@ -15,11 +15,13 @@ module Control_Unit(
     output wire [1:0] ALUSrcB,
     output wire [3:0] ALUop,
     output wire [3:0] RegWrite,
-    output wire [3:0] MemWrite
+    output wire [3:0] MemWrite,
+    output wire [5:0] B_Type
   );
 ///////////////////////////////////////////////////////
 //              Instruction compare                  //
 ///////////////////////////////////////////////////////
+wire is_branch;
 
 // Stage 1 Instructions
 wire inst_lw     = (op == 6'b100011);
@@ -76,11 +78,18 @@ wire inst_bgezal = (op == 6'd1) && (rt == 5'b10001);
 //////////////////////////////////////////////////////////////////
 //                 Control signal assignment                    //
 //////////////////////////////////////////////////////////////////
-assign MemToReg   = ~rst & inst_lw;
-assign JSrc       = ~rst & inst_jr;
-assign MemEn      = ~rst & (inst_sw | inst_lw);
+assign MemToReg   = ~rst &   inst_lw;
+assign JSrc       = ~rst &   inst_jr;
+assign MemEn      = ~rst &  (inst_sw   | inst_lw   );
+assign is_rs_read = ~rst & ~(inst_j    | inst_jal  );
+assign is_rt_read = ~rst & ~(inst_addi | inst_addiu | inst_slti | inst_sltiu |
+                             inst_andi | inst_lui   | inst_ori  | inst_xori  |
+                             inst_j    | inst_jal   | inst_lw );
 
-assign PCSrc[1]   = ~rst & ((inst_bne&(~zero)) | (inst_beq&zero));
+assign is_branch  = inst_bne | inst_blez | inst_bgez | inst_bgezal
+                  | inst_beq | inst_bltz | inst_bgtz | inst_bltzal ;
+
+assign PCSrc[1]   = ~rst & (is_branch   & BranchCond );
 assign PCSrc[0]   = ~rst & (inst_jal    | inst_j     | inst_jr  );
 
 assign ALUSrcA[1] = ~rst & (inst_sll    | inst_sra   | inst_srl );
@@ -134,9 +143,11 @@ assign ALUop[0] = ~rst & (inst_slti | inst_slt  | inst_or    |
                           inst_nor  | inst_sllv | inst_sra   |
                           inst_srav );
 
-assign is_rs_read = ~rst & ~(inst_j    | inst_jal);
-assign is_rt_read = ~rst & ~(inst_addi | inst_addiu | inst_slti | inst_sltiu |
-                             inst_andi | inst_lui   | inst_ori  | inst_xori  |
-                             inst_j    | inst_jal   | inst_lw );
+assign B_Type[5] = inst_bne;
+assign B_Type[4] = inst_beq;
+assign B_Type[3] = inst_bgez | inst_bgezal;
+assign B_Type[2] = inst_bgtz;
+assign B_Type[1] = inst_blez;
+assign B_Type[0] = inst_bltz | inst_bltzal;
 
 endmodule
