@@ -7,7 +7,8 @@
 
 ### 实验要求：
 在**实验一**（[勾凌睿](https://github.com/Lingrui98/CA_P2_S1)、[吴嘉皓](https://github.com/framywhale/CA-Project02_Stage01)）和实验二（[勾凌睿](https://github.com/Lingrui98/CA_P2_S2_Go)、[吴嘉皓](https://github.com/framywhale/CA_P2_S3_Wu)）的基础上:
-1增加15条指令：**DIV、DIVU、MULT、MULTU、MFHI、MFLO、MTHI、MTLO、BGEZ、BGTZ、BLEZ、BLTZ、BLTZAL、BGEZAL、JALR**
+
+1. 增加15条指令：**DIV、DIVU、MULT、MULTU、MFHI、MFLO、MTHI、MTLO、BGEZ、BGTZ、BLEZ、BLTZ、BLTZAL、BGEZAL、JALR**
 2. 具体描述，参见勾凌睿的[README](https://github.com/Lingrui98/CA_P2_S3_Go)
 
 ### （阶段三） 32位五级流水的MPIS处理器数据通路图：（暂为）
